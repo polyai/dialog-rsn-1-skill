@@ -1,0 +1,10 @@
+{
+  "name": "dialog-rsn-1",
+  "version": "0.1.0",
+  "description": "Build with Dialog-RSN-1, PolyAI's realtime voice model: protocol rules, audio patterns, a connection check, and the PolyAI docs as an MCP server.",
+  "author": { "name": "PolyAI", "url": "https://poly.ai" },
+  "homepage": "https://docs.poly.ai/dialog-rsn-1/quickstart-coding-agents",
+  "repository": "https://github.com/polyai/dialog-rsn-1-skill",
+  "license": "Apache-2.0",
+  "keywords": ["polyai", "dialog-rsn-1", "realtime", "voice", "speech-to-speech", "websocket"]
+}

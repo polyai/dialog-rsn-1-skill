@@ -1,0 +1,15 @@
+{
+  "name": "polyai",
+  "owner": {
+    "name": "PolyAI",
+    "url": "https://poly.ai"
+  },
+  "description": "PolyAI plugins for coding agents.",
+  "plugins": [
+    {
+      "name": "dialog-rsn-1",
+      "source": "./",
+      "description": "Build with Dialog-RSN-1, PolyAI's realtime voice model: protocol rules, audio patterns, a connection check, and the PolyAI docs as an MCP server."
+    }
+  ]
+}

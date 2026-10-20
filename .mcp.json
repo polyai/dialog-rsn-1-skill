@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "polyai-docs": {
+      "type": "http",
+      "url": "https://docs.poly.ai/mcp"
+    }
+  }
+}
