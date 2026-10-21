@@ -21,7 +21,9 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 ## Rules
 
 **Connect**
-- Use raw WebSockets: `websockets>=14` in Python (`additional_headers=`, not the pre-14 `extra_headers=`), `ws` in Node. Don't use the `openai` SDK or a framework plugin unless the user asks for one.
+- For new code, use raw WebSockets: `websockets>=14` in Python (`additional_headers=`, not the pre-14 `extra_headers=`), `ws` in Node. Don't reach for the `openai` SDK or a framework unless the user asks for one.
+- Porting an existing OpenAI Realtime app: keep its SDK and change only what Dialog-RSN-1 needs. Read `references/porting.md` first.
+- LiveKit Agents: use PolyAI's `livekit-plugins-polyai`, not LiveKit's OpenAI plugin. Read `references/livekit.md`.
 - URL: `wss://api.studio.poly.ai/v1/realtime`. Read an override from `DIALOG_REALTIME_URL` (the full `wss://.../v1/realtime` URL). Enterprise keys from `studio.us.poly.ai` only work on `wss://api.us.poly.ai/v1/realtime`.
 - Auth: `X-API-KEY: <key>` or `Authorization: Bearer <key>`. No query-string key.
 - In Node, also set a `User-Agent` header. `ws` sends none by default, and the gateway has refused handshakes without one with `403` in the past.
@@ -55,6 +57,7 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 **Tools**
 - Function tools only, in `session.tools`. A call arrives as `response.function_call_arguments.done` (`name`, `arguments`, `call_id`) and that response ends.
 - Answer with a `conversation.item.create` holding `{"type": "function_call_output", "call_id": ..., "output": "<JSON string>"}`, **then send `response.create`**. Without the second `response.create` the model goes silent.
+- A response is text or one tool call, never both, so the caller hears silence while a tool runs. For a slow tool, add a required string parameter marked `"poly_spoken": true`. The model fills in a short line that goes out before the tool runs: spoken by the server on an audio session, or as `response.output_text.delta` for your TTS on a text session. Details in `references/porting.md`.
 
 **Prompting**
 - The `instructions` are for speech: short replies, no markdown or lists, numbers and times written the way they're said. See https://docs.poly.ai/dialog-rsn-1/prompt-guide.md.
@@ -63,7 +66,8 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 ## Make your work testable
 
 - Give every program a headless mode, such as `--say "Is Friday free?"`, that sends one text turn, prints the reply, saves any audio to `reply.wav`, and exits non-zero on an `error` event or a `response.done` that isn't `completed`.
-- For audio input without a mic, add `--wav caller.wav` to stream a file in real time and then stream about a second of silence so the turn can end. Make a clip with `check.py --speak "Is Friday free?" --out caller.wav`.
+- For audio input without a mic, add `--wav caller.wav` to stream a file in real time and then keep streaming silence until the reply arrives, so the server can find the end of the turn. Make a clip with `check.py --speak "Is Friday free?" --out caller.wav`, which says exactly those words in the server voice.
+- For a browser page, test the page in a headless browser with the clip as its microphone, not only the relay. See `references/audio.md`.
 - After every change, run `check.py` and the headless mode. Don't tell the user it works until both pass. Then tell them what to try by voice.
 
 ## Troubleshooting
@@ -88,7 +92,9 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 Fetch Markdown pages directly (append `.md`). The index of every page is https://docs.poly.ai/llms.txt. The docs are also an MCP server at `https://docs.poly.ai/mcp`.
 
 - `references/protocol.md`: event sequences, playback reports, knowledge and language extensions, error and close codes.
-- `references/audio.md`: mic capture and playback in Python, Node and the browser, the relay, and telephony.
+- `references/audio.md`: mic capture and playback in Python, Node and the browser, the relay, telephony, and testing without a mic.
+- `references/porting.md`: porting an OpenAI Realtime app, features with no match, and spoken lines for slow tools.
+- `references/livekit.md`: LiveKit Agents with `livekit-plugins-polyai`.
 - Full reference: https://docs.poly.ai/api-reference/dialog-rsn-1/reference.md
 - Limits and pricing: https://docs.poly.ai/api-reference/dialog-rsn-1/limits.md
 - Working examples (all raw WebSockets): https://github.com/polyai/dialog-rsn-1-python-from-scratch and https://github.com/polyai/dialog-rsn-1-javascript-browser
