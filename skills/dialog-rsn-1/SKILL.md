@@ -12,7 +12,7 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 ## Before you write code
 
 1. **Check for a key.** The code reads `POLY_API_KEY` from the environment or a `.env` file, with the environment winning, and reads `DIALOG_REALTIME_URL` the same way so the key and host always come from one place. Never ask the user to paste the key into the chat, and never print it. If they don't have one, send them to the agentic setup prompt at https://docs.poly.ai/adk/get-started/agentic-setup.md (it runs `poly apikey --region studio`), or to studio.poly.ai, **API Keys** tab.
-2. **Prove the key and host work** before building anything:
+2. **Prove the key and host work** before building anything. Do this in every new project, even when the key is set and the task looks simple, and tell the user the result:
    ```bash
    uv run <this skill's directory>/scripts/check.py
    ```
