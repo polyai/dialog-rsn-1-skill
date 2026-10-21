@@ -15,6 +15,7 @@ import asyncio
 import base64
 import json
 import os
+import re
 import sys
 import wave
 
@@ -169,16 +170,28 @@ async def check(key: str) -> None:
     print("PASS")
 
 
+def words(text: str) -> list[str]:
+    return re.sub(r"[^a-z0-9 ]", "", text.lower()).split()
+
+
 async def speak(key: str, text: str, path: str) -> None:
-    ws = await connect(key)
-    await update(ws, {
-        "instructions": "Repeat the user's message word for word. Say nothing else.",
-        "audio": {"output": {"voice": VOICE}},
-    })
-    reply = await say(ws, text)
-    await ws.close()
-    save_wav(path, bytes(reply["audio"]))
-    print(f"saved {len(reply['audio']) / 48000:.1f} s to {path} (24 kHz PCM16 mono): {reply['text']!r}")
+    # Sent as a user message, a question gets answered rather than repeated, so the line goes
+    # in the instructions as a script. The transcript is checked so a wrong clip is never saved.
+    for attempt in range(3):
+        ws = await connect(key)
+        await update(ws, {
+            "instructions": f'You are a voice actor. Your script is one line: "{text}" When asked, '
+            "read the script aloud exactly as written. Say nothing before or after it.",
+            "audio": {"output": {"voice": VOICE}},
+        })
+        reply = await say(ws, "Read the script.")
+        await ws.close()
+        if words(reply["text"]) == words(text):
+            save_wav(path, bytes(reply["audio"]))
+            print(f"saved {len(reply['audio']) / 48000:.1f} s to {path} (24 kHz PCM16 mono): {reply['text']!r}")
+            return
+        print(f"retry  the voice said {reply['text']!r}", file=sys.stderr)
+    raise CheckFailed(f"couldn't get the exact line spoken in 3 tries; nothing saved to {path}")
 
 
 def main() -> None:
