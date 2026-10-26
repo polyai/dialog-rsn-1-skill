@@ -23,7 +23,7 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 **Connect**
 - For new code, use raw WebSockets: `websockets>=14` in Python (`additional_headers=`, not the pre-14 `extra_headers=`), `ws` in Node. Don't reach for the `openai` SDK or a framework unless the user asks for one.
 - Porting an existing OpenAI Realtime app: keep its SDK and change only what Dialog-RSN-1 needs. Read `references/porting.md` first.
-- LiveKit Agents: use PolyAI's `livekit-plugins-polyai`, not LiveKit's OpenAI plugin. Read `references/livekit.md`.
+- LiveKit Agents: use LiveKit's OpenAI realtime plugin with Dialog-RSN-1's URL and key, and `modalities=["text"]` when you pass a TTS. Read `references/livekit.md`.
 - URL: `wss://api.studio.poly.ai/v1/realtime`. Read an override from `DIALOG_REALTIME_URL` (the full `wss://.../v1/realtime` URL). Enterprise keys from `studio.us.poly.ai` only work on `wss://api.us.poly.ai/v1/realtime`.
 - Auth: `X-API-KEY: <key>` or `Authorization: Bearer <key>`. No query-string key.
 - In Node, also set a `User-Agent` header. `ws` sends none by default, and the gateway has refused handshakes without one with `403` in the past.
@@ -94,7 +94,7 @@ Fetch Markdown pages directly (append `.md`). The index of every page is https:/
 - `references/protocol.md`: event sequences, playback reports, knowledge and language extensions, error and close codes.
 - `references/audio.md`: mic capture and playback in Python, Node and the browser, the relay, telephony, and testing without a mic.
 - `references/porting.md`: porting an OpenAI Realtime app, features with no match, and spoken lines for slow tools.
-- `references/livekit.md`: LiveKit Agents with `livekit-plugins-polyai`.
+- `references/livekit.md`: LiveKit Agents on LiveKit's OpenAI realtime plugin.
 - Full reference: https://docs.poly.ai/api-reference/dialog-rsn-1/reference.md
 - Limits and pricing: https://docs.poly.ai/api-reference/dialog-rsn-1/limits.md
 - Working examples (all raw WebSockets): https://github.com/polyai/dialog-rsn-1-python-from-scratch and https://github.com/polyai/dialog-rsn-1-javascript-browser

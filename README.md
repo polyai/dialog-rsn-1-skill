@@ -7,7 +7,7 @@ Dialog-RSN-1 speaks the OpenAI Realtime protocol. Coding agents know that protoc
 What's in it:
 
 - `skills/dialog-rsn-1/SKILL.md`: the rules. Connection, session, turns, audio formats, the server voice, tools, barge-in, errors, and how to make the code testable.
-- `skills/dialog-rsn-1/references/`: event order, playback reports, extensions and error codes (`protocol.md`); mic, speaker, browser relay, telephony and testing patterns (`audio.md`); porting an OpenAI Realtime app (`porting.md`); LiveKit Agents with `livekit-plugins-polyai` (`livekit.md`).
+- `skills/dialog-rsn-1/references/`: event order, playback reports, extensions and error codes (`protocol.md`); mic, speaker, browser relay, telephony and testing patterns (`audio.md`); porting an OpenAI Realtime app (`porting.md`); LiveKit Agents on LiveKit's OpenAI realtime plugin (`livekit.md`).
 - `skills/dialog-rsn-1/scripts/check.py`: runs a spoken turn and a tool turn against your key and host, and says exactly what's wrong if one fails. `--speak "text" --out caller.wav` makes a clip of caller speech for testing without a mic.
 - The Claude Code plugin also connects the PolyAI docs MCP server (`https://docs.poly.ai/mcp`).
 
