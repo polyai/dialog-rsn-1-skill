@@ -11,17 +11,22 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
 
 ## Before you write code
 
-1. **Check for a key.** The code reads `POLY_API_KEY` from the environment or a `.env` file, with the environment winning, and reads `DIALOG_REALTIME_URL` the same way so the key and host always come from one place. Never ask the user to paste the key into the chat, and never print it. If they don't have one, send them to the agentic setup prompt at https://docs.poly.ai/adk/get-started/agentic-setup.md (it runs `poly apikey --region studio`), or to studio.poly.ai, **API Keys** tab.
+1. **Check for a key, without printing it.** The code reads `POLY_API_KEY` from the environment or a `.env` file, with the environment winning, and reads `DIALOG_REALTIME_URL` the same way so the key and host always come from one place. Never ask the user to paste the key into the chat, and never put its value in your context: no `echo $POLY_API_KEY`, `env`, `printenv` or `cat .env`. To see whether it's set, run exactly this, which prints where the key is and never the key:
+   ```bash
+   if [ -n "$POLY_API_KEY" ]; then echo "set in environment"; elif grep -qs '^ *POLY_API_KEY=.' .env; then echo "set in .env"; else echo "missing"; fi
+   ```
+   If it's missing, send them to the agentic setup prompt at https://docs.poly.ai/adk/get-started/agentic-setup.md (it runs `poly apikey --region studio`), or to studio.poly.ai, **API Keys** tab.
 2. **Prove the key and host work** before building anything. Do this in every new project, even when the key is set and the task looks simple, and tell the user the result:
    ```bash
    uv run <this skill's directory>/scripts/check.py
    ```
-   It runs a spoken turn and a tool turn, and exits non-zero with the reason if anything fails. Without `uv`: `pip install 'websockets>=14'` and run it with `python3`. If it fails on a 401, read the Troubleshooting table below before you change any code.
+   It runs a spoken turn and a tool turn, and exits non-zero with the reason if anything fails. It says where it found the key, never the key itself. It needs `uv`: if `uv` is missing, install it (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or `brew install uv`) instead of falling back to pip. If the user doesn't want `uv`, use a virtual environment: `python3 -m venv .venv && .venv/bin/pip install 'websockets>=14' && .venv/bin/python <this skill's directory>/scripts/check.py`. Never `pip install` into the system Python. If it fails on a 401, read the Troubleshooting table below before you change any code.
 
 ## Rules
 
 **Connect**
 - For new code, use raw WebSockets: `websockets>=14` in Python (`additional_headers=`, not the pre-14 `extra_headers=`), `ws` in Node. Don't reach for the `openai` SDK or a framework unless the user asks for one.
+- Python dependencies go in the project, never the system Python: `uv init` then `uv add websockets`, or a project `.venv` if the user doesn't use `uv`.
 - Porting an existing OpenAI Realtime app: keep its SDK and change only what Dialog-RSN-1 needs. Read `references/porting.md` first.
 - LiveKit Agents: use LiveKit's OpenAI realtime plugin with Dialog-RSN-1's URL and key, and `modalities=["text"]` when you pass a TTS. Read `references/livekit.md`.
 - URL: `wss://api.studio.poly.ai/v1/realtime`. Read an override from `DIALOG_REALTIME_URL` (the full `wss://.../v1/realtime` URL). Enterprise keys from `studio.us.poly.ai` only work on `wss://api.us.poly.ai/v1/realtime`.
