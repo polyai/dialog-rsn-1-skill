@@ -17,7 +17,7 @@ A wrong or missing rate gets no error. The model just hears garbled audio and ma
 
 ## Python: mic and speaker
 
-`sounddevice` (PortAudio) works on macOS, Linux and Windows. `pip install sounddevice numpy`.
+`sounddevice` (PortAudio) works on macOS, Linux and Windows. `uv add sounddevice numpy` (or `pip install` inside the project's `.venv`, never the system Python).
 
 ```python
 import asyncio, base64, json
