@@ -20,7 +20,7 @@ The wire format is the OpenAI Realtime API (GA schema). You probably know that p
    ```bash
    uv run <this skill's directory>/scripts/check.py
    ```
-   It runs a spoken turn and a tool turn, and exits non-zero with the reason if anything fails. It says where it found the key, never the key itself. It needs `uv`: if `uv` is missing, install it (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or `brew install uv`) instead of falling back to pip. If the user doesn't want `uv`, use a virtual environment: `python3 -m venv .venv && .venv/bin/pip install 'websockets>=14' && .venv/bin/python <this skill's directory>/scripts/check.py`. Never `pip install` into the system Python. If it fails on a 401, read the Troubleshooting table below before you change any code.
+   It runs a spoken turn and a tool turn, and exits non-zero with the reason if anything fails. It says where it found the key, never the key itself. It needs `uv`: if `uv` is missing, install it (`brew install uv`, or the steps at https://docs.astral.sh/uv/getting-started/installation/) instead of falling back to pip. If the user doesn't want `uv`, use a virtual environment: `python3 -m venv .venv && .venv/bin/pip install 'websockets>=14' && .venv/bin/python <this skill's directory>/scripts/check.py`. Never `pip install` into the system Python. If it fails on a 401, read the Troubleshooting table below before you change any code.
 
 ## Rules
 
