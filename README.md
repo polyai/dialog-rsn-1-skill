@@ -6,8 +6,8 @@ Dialog-RSN-1 speaks the OpenAI Realtime protocol. Coding agents know that protoc
 
 What's in it:
 
-- `skills/dialog-rsn-1/SKILL.md`: the rules. Connection, session, turns, audio formats, the server voice, tools, barge-in, errors, and how to make the code testable.
-- `skills/dialog-rsn-1/references/`: event order, playback reports, extensions and error codes (`protocol.md`); mic, speaker, browser relay, telephony and testing patterns (`audio.md`); porting an OpenAI Realtime app (`porting.md`); LiveKit Agents on LiveKit's OpenAI realtime plugin (`livekit.md`).
+- `skills/dialog-rsn-1/SKILL.md`: the rules. Connection, session, turns, audio formats, the server voice, tools, barge-in, prompting, errors, and how to make the code testable. It also tells the agent which docs page to fetch for each task, such as porting an OpenAI Realtime app, LiveKit, a browser page or your own TTS.
+- `skills/dialog-rsn-1/references/audio.md`: mic and speaker code for Python, Node and the browser, telephony, and testing without a mic.
 - `skills/dialog-rsn-1/scripts/check.py`: runs a spoken turn and a tool turn against your key and host, and says exactly what's wrong if one fails. `--speak "text" --out caller.wav` makes a clip of caller speech for testing without a mic.
 - The Claude Code plugin also connects the PolyAI docs MCP server (`https://docs.poly.ai/mcp`).
 
@@ -52,7 +52,7 @@ PASS
 
 ## Keeping it current
 
-The rules track the live API. When the [reference](https://docs.poly.ai/api-reference/dialog-rsn-1/reference) changes, update `SKILL.md` and `references/`, run `check.py`, and bump `version` in `.claude-plugin/plugin.json`.
+The [docs](https://docs.poly.ai/dialog-rsn-1/overview) are the source of truth, and the skill sends agents to them for anything beyond its rules. So most API changes need only a docs change. When the [reference](https://docs.poly.ai/api-reference/dialog-rsn-1/reference) changes one of the rules in `SKILL.md`, update the rule, run `check.py`, and bump `version` in `.claude-plugin/plugin.json`.
 
 ## License
 
