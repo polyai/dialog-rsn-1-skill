@@ -91,7 +91,7 @@ wss.on("connection", (client) => {
 
 Serve the page from the same server so the socket is same-origin. Don't forward the key to the page in any form.
 
-**Mic capture:** `getUserMedia` into an `AudioWorklet` that converts Float32 to Int16 and posts each block to the page, which base64-encodes it into `input_audio_buffer.append`. Set `audio.input.format.rate` to `audioContext.sampleRate` (often 48000), or create the context with `new AudioContext({ sampleRate: 24000 })`. Ask for `{ audio: { echoCancellation: true } }`.
+**Mic capture:** `getUserMedia` into an `AudioWorklet` that converts Float32 to Int16 and posts each block to the page, which base64-encodes it into `input_audio_buffer.append`. Set `audio.input.format.rate` to `audioContext.sampleRate` (often 48000), or create the context with `new AudioContext({ sampleRate: 24000 })`. Ask for `{ audio: { echoCancellation: true, noiseSuppression: false } }`. Browsers turn noise suppression on by default, and it removes cues Dialog-RSN-1 listens for.
 
 If the worklet posts with a transfer list (`this.port.postMessage(buf, [buf.buffer])`), that buffer is detached afterwards and has length 0. Allocate a new one for every frame. Reusing it sends one frame and then nothing, so the page says it's listening and never answers.
 
@@ -108,7 +108,7 @@ Twilio media streams and SIP trunks send 8 kHz G.711. Pass the base64 payload st
 ## Testing without a mic
 
 1. Make a clip of caller speech: `uv run <skill dir>/scripts/check.py --speak "Is Friday free?" --out caller.wav`. On macOS, `say -o caller.wav --data-format=LEI16@24000 "Is Friday free?"` works too.
-2. Stream it in 20 ms frames in real time, then keep streaming silence (zero bytes) until the reply arrives, so the server can find the end of the turn.
-3. Expect `speech_started`, `speech_stopped`, `committed`, the transcript in `conversation.item.input_audio_transcription.completed`, then the reply.
+2. Stream it in 20 ms frames in real time, then keep streaming silence (zero bytes) until the reply arrives, so Dialog-RSN-1 can hear that the caller has finished.
+3. Expect `speech_started`, `speech_stopped`, `committed`, then the reply. The transcript in `conversation.item.input_audio_transcription.completed` arrives during or after the reply, so don't wait for it before handling the reply, and don't assert on its position.
 
 **A browser page:** test the page, not only the relay. A script that talks to the relay never runs the page's mic and playback code. Load the page in a headless browser with Playwright and feed it the clip as the microphone: in Chromium, launch with `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream --use-file-for-fake-audio-capture=caller.wav`, or add an init script that makes `getUserMedia` return a stream playing the clip. Click the start button, then check from the relay's log or the page that `input_audio_buffer.append` frames keep flowing after the first one, a reply arrives, and the tool is called.
