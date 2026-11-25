@@ -32,13 +32,14 @@ Fetch pages as Markdown: the URLs below already end in `.md`. The index of every
 | Task | Fetch first |
 | --- | --- |
 | Any code that speaks the protocol | https://docs.poly.ai/api-reference/dialog-rsn-1/reference.md |
-| Writing `instructions` | https://docs.poly.ai/dialog-rsn-1/prompting/basics.md, then the other `prompting/` pages it links (turn-taking, speech understanding, response style, tools, audio-aware) |
+| Writing `instructions` | https://docs.poly.ai/dialog-rsn-1/prompting/basics.md, then whichever of these fit: https://docs.poly.ai/dialog-rsn-1/prompting/turn-taking.md, https://docs.poly.ai/dialog-rsn-1/prompting/speech-understanding.md, https://docs.poly.ai/dialog-rsn-1/prompting/response-style.md, https://docs.poly.ai/dialog-rsn-1/prompting/tools.md, https://docs.poly.ai/dialog-rsn-1/prompting/audio-aware.md |
 | Tools, knowledge search, citations | https://docs.poly.ai/dialog-rsn-1/tools-and-knowledge.md |
 | Porting an OpenAI Realtime app | https://docs.poly.ai/dialog-rsn-1/coding-agents/openai-realtime-migration.md |
 | LiveKit Agents | https://docs.poly.ai/dialog-rsn-1/guides/livekit.md and https://docs.poly.ai/dialog-rsn-1/coding-agents/livekit.md |
 | A browser page | https://docs.poly.ai/dialog-rsn-1/coding-agents/javascript-browser.md, and `references/audio.md` here |
-| Your own TTS voice | https://docs.poly.ai/dialog-rsn-1/guides/streaming-text-to-speech.md |
-| Transcription only, no replies | https://docs.poly.ai/dialog-rsn-1/guides/speech-to-text.md |
+| A Python voice agent with a mic | https://docs.poly.ai/dialog-rsn-1/guides/python-from-scratch.md |
+| Your own TTS voice | https://docs.poly.ai/dialog-rsn-1/guides/streaming-text-to-speech.md and https://docs.poly.ai/dialog-rsn-1/coding-agents/streaming-text-to-speech.md |
+| Transcription only, no replies | The reference's "Transcription sessions" section for the wire protocol, and https://docs.poly.ai/dialog-rsn-1/guides/speech-to-text.md for a worked example on the `openai` SDK |
 | Limits, concurrency, pricing | https://docs.poly.ai/api-reference/dialog-rsn-1/limits.md |
 
 `references/audio.md` has mic capture and playback in Python, Node and the browser, telephony, and testing without a mic.
@@ -49,7 +50,7 @@ Fetch pages as Markdown: the URLs below already end in `.md`. The index of every
 - For new code, use raw WebSockets: `websockets>=14` in Python (`additional_headers=`, not the pre-14 `extra_headers=`), `ws` in Node. Don't reach for the `openai` SDK or a framework unless the user asks for one.
 - Python dependencies go in the project, never the system Python: `uv init` then `uv add websockets`, or a project `.venv` if the user doesn't use `uv`.
 - Porting an existing OpenAI Realtime app: keep its SDK, its structure and what the app does, and change only what Dialog-RSN-1 needs. List each change with the reason.
-- LiveKit Agents: use LiveKit's own OpenAI realtime plugin, `openai.realtime.RealtimeModel`, with Dialog-RSN-1's URL and key and `modalities=["text"]` when you pass a TTS. Leave out `stt`, `vad` and `turn_handling`. Don't use `livekit-plugins-polyai`, which is retired.
+- LiveKit Agents: use LiveKit's own OpenAI realtime plugin, `openai.realtime.RealtimeModel`, with Dialog-RSN-1's key and `modalities=["text"]` when you pass a TTS. Pass `base_url` without the trailing `/realtime` (`wss://api.studio.poly.ai/v1`), because the plugin adds it, and strip it if you read the URL from `DIALOG_REALTIME_URL`. Leave out `stt`, `vad` and `turn_handling`. Don't use `livekit-plugins-polyai`, which is retired.
 - URL: `wss://api.studio.poly.ai/v1/realtime`. Read an override from `DIALOG_REALTIME_URL` (the full `wss://.../v1/realtime` URL). Enterprise keys from `studio.us.poly.ai` only work on `wss://api.us.poly.ai/v1/realtime`.
 - Auth: `X-API-KEY: <key>` or `Authorization: Bearer <key>`. No query-string key.
 - In Node, also set a `User-Agent` header, because `ws` sends none by default and the gateway can refuse a handshake without one.
@@ -64,8 +65,8 @@ Fetch pages as Markdown: the URLs below already end in `.md`. The index of every
 - Refused with an `error` (and the whole update dropped): `tool_choice` other than `"auto"`, tools whose type isn't `"function"` (no MCP tools), `idle_timeout_ms`, `interrupt_response: false`, `prompt`, `reasoning`, and any unknown key not prefixed `poly_`.
 - Accepted and ignored, so don't rely on them: turn-detection timing (`threshold`, `silence_duration_ms`, `prefix_padding_ms`, `eagerness`), `semantic_vad`, `noise_reduction`, `audio.output.speed`, `parallel_tool_calls`. To change how long it waits for the caller, describe the callers in `instructions` (see Prompting).
 - To open the call with fixed words, such as a greeting or a recording notice, set `poly_first_assistant_message` on the session. It's said straight after `session.updated`, with no generation. Don't also send `response.create` to start it, or the model adds a second greeting of its own.
-- To reply in a language other than the caller's, set `poly_response_language` (`"es"`, `"pt-BR"`) or say so in `instructions`. Instructions that name a language take precedence.
-- For transcription with no replies, open a transcription session (`?intent=transcription` on the URL, then `session.update` with `"type": "transcription"`) instead of a realtime session you keep quiet. It takes any language through `audio.input.transcription.language`.
+- To choose the reply language, set `poly_response_language` (`"es"`, `"pt-BR"`) or say so in `instructions`, for example "reply in the language the caller speaks". Instructions that name a language take precedence.
+- For transcription with no replies, open a transcription session (`?intent=transcription` on the URL, then `session.update` with `"type": "transcription"`) instead of a realtime session you keep quiet. Set its language with `audio.input.transcription.language`, an ISO 639 code such as `es` or `en-US`.
 
 **Turns**
 - A text turn is two events: `conversation.item.create` (the message), then `response.create`. Read deltas until `response.done`, then check `response.status` is `"completed"`.
@@ -90,7 +91,7 @@ Fetch pages as Markdown: the URLs below already end in `.md`. The index of every
 - Answer with a `conversation.item.create` holding `{"type": "function_call_output", "call_id": ..., "output": "<JSON string>"}`, **then send `response.create`**. Without the second `response.create` the model goes silent. Echo the `call_id` exactly: a mismatched one is accepted with no error, and the model never sees the result.
 - The model calls one tool at a time. To use several, it calls the next one in the response after each result, so repeat the loop until a response ends with a reply to the caller.
 - When a tool looks slow, such as an API lookup, the model says a short line to the caller as it calls it ("let me pull that up for you"), and it stays quiet on quick or behind-the-scenes tools. The line is the response's message: spoken on an audio session, `response.output_text.delta` on a text session. You don't need to declare anything for this.
-- To override that on one tool, set `"poly_speech": "none"` (never speak) or `"required"` (always speak). To control what it says, mark one required string parameter `"poly_spoken": true`, and take it out of the arguments before calling the user's function. Details on the tools and knowledge page.
+- To override that on one tool, set `"poly_speech": "none"` to keep it quiet, or `"required"` to ask for a line on every call. To control what it says instead, mark one required string parameter `"poly_spoken": true`, and take it out of the arguments before calling the user's function. Use one or the other: a tool with both is refused, and the refusal drops the whole `session.update`.
 - Knowledge search is a tool like any other. Your code runs the search and attaches the results to the `function_call_output` as `poly_knowledge`, a list of `{name, content}`. `response.done` then lists the topics the reply used in `poly_cited_topics`.
 
 **Prompting**
@@ -115,6 +116,7 @@ Fetch pages as Markdown: the URLs below already end in `.md`. The index of every
 | --- | --- | --- |
 | `401` on connect | Wrong key, or a key from a different Studio than the host | Key from studio.poly.ai on api.studio.poly.ai; key from studio.us.poly.ai on api.us.poly.ai |
 | `401` from the code but `check.py` passes | Key and host read from different places (shell profile vs `.env`) | Resolve both the same way as `check.py`, which prints where each came from |
+| `403` on connect | A personal access token instead of an API key, or, from Node, no `User-Agent` header | Use a key from the API Keys tab; set a `User-Agent` |
 | `402` on connect | No balance on the account | The user adds funds at studio.poly.ai |
 | `429` with `session_limit_reached` | Too many open sessions | Close a session; there's no Retry-After |
 | `TypeError` on `additional_headers` | websockets older than 14 | `websockets>=14` |
